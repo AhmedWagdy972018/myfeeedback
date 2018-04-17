@@ -203,18 +203,43 @@ if ($mods = get_user_capability_course('moodle/course:viewparticipants', $userid
 //If user doesn't have the moodle capability to see the specific user they can't access it$USER->myfeedback_lock
 
 
-echo $USER->myfeedback_lock;
-echo $USER->id."/".optional_param('userid', 0, PARAM_INT);
-if ($USER->myfeedback_lock == 0){
-  echo "false";
-  $gogo = false;
-}
-else{
-  echo "true";
-  $gogo = true;
-}
 
-if (  $progadmin || $module_tutor || $userid == $USER->id || has_capability('moodle/user:viewdetails', $usercontext) || $gogo ) {
+ if(isset($_POST['lockfeed'])){
+   $remotedb->update_record('user', array('id'=>$USER->id ,'myfeedback_lock'=>0));
+   echo "light";
+ }
+ elseif(isset($_POST['unlockfeed'])) {
+   $remotedb->update_record('user', array('id'=>$USER->id ,'myfeedback_lock'=>1));
+   echo "darkness";
+ }
+
+    $trigo = $remotedb->get_records('user', array('id'=>$userid));
+    $myfeed_status = $trigo[$userid]->myfeedback_lock;
+
+    // echo $myfeed_status;
+
+    if ($myfeed_status == 0){
+      // echo "false";
+      $feed_flag = false;
+      $myform1 =
+      '<form method="post" action="'.basename($_SERVER['REQUEST_URI']).'">
+              <button type="submit" class="btn btn-primary btn-block btn-sm" name="unlockfeed">Set Public</button>
+          </form>';
+    }
+    else{
+      // echo "true";
+      $feed_flag = true;
+      $myform1 =
+      '<form method="post" action="'.basename($_SERVER['REQUEST_URI']).'">
+              <button type="submit" class="btn btn-primary btn-block btn-sm" name="lockfeed">Set Private</button>
+          </form>';
+    }
+
+    if ($userid == $USER->id)
+    echo $myform1;
+
+
+if (  $progadmin || $module_tutor || $userid == $USER->id || has_capability('moodle/user:viewdetails', $usercontext) || $feed_flag) {
 //Has access to the user
 } else {
     echo $OUTPUT->notification(get_string('usernotavailable', 'error'));
